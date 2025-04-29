@@ -1,9 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { questionsData, Question } from '@/data/questions'; // Question 타입 추가
-
-// 임시 데이터 저장소 (실제로는 DB 사용 권장)
-// 다른 라우트에서 사용할 수 있도록 export 추가
-export let questions: Question[] = [...questionsData];
+import { Question } from '@/data/questions';
+import { questions } from './dataStore';
 
 // 재귀적으로 부모 질문을 찾는 함수
 function findParentAndAddChild(items: Question[], parentId: string, child: Question): boolean {
