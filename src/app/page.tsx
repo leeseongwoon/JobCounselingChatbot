@@ -1,7 +1,8 @@
 'use client';
 
 import styled from 'styled-components';
-import { questionsData, Question } from '@/data/questions';
+// import { questionsData, Question } from '@/data/questions'; // 제거
+import { Question } from '@/data/questions'; // Question 타입만 유지
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -151,20 +152,52 @@ const NavButton = styled.button`
 `;
 
 export default function Home() {
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]); // API로부터 모든 질문 로드
+  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+  const [error, setError] = useState<string | null>(null); // 에러 상태 추가
+
   const [conversation, setConversation] = useState<Message[]>([]);
-  const [currentOptions, setCurrentOptions] = useState<Question[]>(questionsData);
+  // currentOptions 초기값을 빈 배열로 변경
+  const [currentOptions, setCurrentOptions] = useState<Question[]>([]); 
   const [optionsHistory, setOptionsHistory] = useState<Question[][]>([]);
   const messageListRef = useRef<HTMLDivElement>(null);
 
+  // API 호출하여 질문 데이터 로드
   useEffect(() => {
-    const initialBotMessage: Message = {
-      id: uuidv4(),
-      sender: 'bot',
-      text: '안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.',
-      options: questionsData
-    };
-    setConversation([initialBotMessage]);
-  }, []);
+    async function fetchInitialData() {
+        setLoading(true);
+        setError(null);
+        try {
+            // API 호출 시 캐시 사용 안 함 (항상 최신 데이터)
+            const response = await fetch('/api/questions', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error('질문 데이터를 불러오는 데 실패했습니다.');
+            }
+            const data: Question[] = await response.json();
+            setAllQuestions(data);
+            setCurrentOptions(data); // 초기 옵션을 로드된 데이터로 설정
+
+            // 초기 메시지 설정
+            const initialBotMessage: Message = {
+                id: uuidv4(),
+                sender: 'bot',
+                text: '안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.',
+                options: data // 초기 옵션 설정
+            };
+            setConversation([initialBotMessage]);
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('질문 데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchInitialData();
+  }, []); // 마운트 시 한 번만 실행
 
   useEffect(() => {
     if (messageListRef.current) {
@@ -203,17 +236,28 @@ export default function Home() {
     }
   };
 
+  // handleHome 수정: API에서 로드한 allQuestions 사용
   const handleHome = () => {
+    if (loading || error) return; // 데이터 로딩 중이거나 에러 시 동작 안 함
     const initialBotMessage: Message = {
       id: uuidv4(),
       sender: 'bot',
       text: '안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.',
-      options: questionsData
+      options: allQuestions // 로드된 전체 질문 사용
     };
     setConversation([initialBotMessage]);
-    setCurrentOptions(questionsData);
+    setCurrentOptions(allQuestions); // 로드된 전체 질문 사용
     setOptionsHistory([]);
   };
+
+  // 로딩 및 에러 상태 처리 추가
+  if (loading) {
+    return <PageWrapper><Container><Title>로딩 중...</Title></Container></PageWrapper>;
+  }
+
+  if (error) {
+     return <PageWrapper><Container><Title>오류 발생</Title><p style={{textAlign: 'center', color: 'red'}}>{error}</p></Container></PageWrapper>;
+  }
 
   return (
     <PageWrapper>
