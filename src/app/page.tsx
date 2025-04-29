@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { Question } from "@/data/questions"; // Question 타입만 유지
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
+import FullscreenLoader from "./components/FullscreenLoader";
 
 interface Message {
   id: string;
@@ -150,7 +151,7 @@ const AdminLink = styled.a`
   text-decoration: none;
   font-size: 0.9rem;
   cursor: pointer;
-
+  
   &:hover {
     text-decoration: underline;
     color: #2c5282;
@@ -282,13 +283,7 @@ export default function Home() {
 
   // 로딩 및 에러 상태 처리 추가
   if (loading) {
-    return (
-      <PageWrapper>
-        <Container>
-          <Title>로딩 중...</Title>
-        </Container>
-      </PageWrapper>
-    );
+    return <FullscreenLoader />;
   }
 
   if (error) {

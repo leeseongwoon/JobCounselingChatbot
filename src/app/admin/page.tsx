@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/data/questions'; // Question 타입 import
+import FullscreenLoader from '../components/FullscreenLoader';
 
 // ===================================
 // QuestionItem 재귀 컴포넌트
@@ -432,10 +433,12 @@ export default function AdminPage() {
     }
   }, [fetchQuestions]); // 의존성 추가
 
+  // 로딩 상태 처리
   if (loading) {
-    return <div>로딩 중...</div>;
+    return <FullscreenLoader title="관리자 페이지" message="데이터를 불러오는 중입니다..." />;
   }
 
+  // 에러 상태 처리
   if (error) {
     return <div>오류: {error}</div>;
   }
