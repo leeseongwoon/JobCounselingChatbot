@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import styled from 'styled-components';
+import styled from "styled-components";
 // import { questionsData, Question } from '@/data/questions'; // 제거
-import { Question } from '@/data/questions'; // Question 타입만 유지
-import { useState, useEffect, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { Question } from "@/data/questions"; // Question 타입만 유지
+import { useState, useEffect, useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface Message {
   id: string;
-  sender: 'user' | 'bot';
+  sender: "user" | "bot";
   text: string;
   options?: Question[];
 }
@@ -16,8 +16,8 @@ interface Message {
 // 최상위 Wrapper 정의
 const PageWrapper = styled.div`
   background-color: #f9fafb;
-  height: calc(100vh - 4rem);
-  margin: 2rem 0;
+  height: calc(100vh - 2rem);
+  margin: 1rem 0;
   display: grid;
   /* place-items: center; */
   justify-items: center; /* 수평 중앙 정렬 */
@@ -63,7 +63,12 @@ const MessageList = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.3); /* 스크롤바 썸 색상 (약간 투명한 검정) */
+    background-color: rgba(
+      0,
+      0,
+      0,
+      0.3
+    ); /* 스크롤바 썸 색상 (약간 투명한 검정) */
     border-radius: 3px; /* 스크롤바 썸 둥근 모서리 */
   }
 
@@ -76,7 +81,7 @@ const MessageList = styled.div`
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* 썸 색상, 트랙 투명 */
 `;
 
-const MessageBubble = styled.div<{ $sender: 'user' | 'bot' }>`
+const MessageBubble = styled.div<{ $sender: "user" | "bot" }>`
   max-width: 70%;
   padding: 0.8rem 1rem;
   border-radius: 18px;
@@ -84,13 +89,16 @@ const MessageBubble = styled.div<{ $sender: 'user' | 'bot' }>`
   line-height: 1.5;
   word-wrap: break-word;
   font-size: 1rem;
-  
-  ${({ $sender }) => $sender === 'user' ? `
+
+  ${({ $sender }) =>
+    $sender === "user"
+      ? `
     background-color: #e2e8f0;
     color: #2d3748;
     margin-left: auto;
     border-bottom-right-radius: 4px;
-  ` : `
+  `
+      : `
     background-color: #4299e1;
     color: white;
     margin-right: auto;
@@ -105,10 +113,10 @@ const OptionsContainer = styled.div`
 `;
 
 const OptionsGrid = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 `;
 
 const OptionButton = styled.button`
@@ -120,7 +128,7 @@ const OptionButton = styled.button`
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #e2e8f0;
   }
@@ -129,6 +137,24 @@ const OptionButton = styled.button`
 const NavigationButtons = styled.div`
   display: flex;
   justify-content: space-between;
+  gap: 0.5rem;
+`;
+
+const AdminLinkContainer = styled.div`
+  text-align: center;
+  margin-bottom: 0.8rem;
+`;
+
+const AdminLink = styled.a`
+  color: #2b6cb0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+    color: #2c5282;
+  }
 `;
 
 const NavButton = styled.button`
@@ -140,14 +166,14 @@ const NavButton = styled.button`
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
-  
+
   &:hover:not(:disabled) {
     background-color: #2d3748;
   }
 
   &:disabled {
-      background-color: #a0aec0;
-      cursor: not-allowed;
+    background-color: #a0aec0;
+    cursor: not-allowed;
   }
 `;
 
@@ -158,43 +184,42 @@ export default function Home() {
 
   const [conversation, setConversation] = useState<Message[]>([]);
   // currentOptions 초기값을 빈 배열로 변경
-  const [currentOptions, setCurrentOptions] = useState<Question[]>([]); 
+  const [currentOptions, setCurrentOptions] = useState<Question[]>([]);
   const [optionsHistory, setOptionsHistory] = useState<Question[][]>([]);
   const messageListRef = useRef<HTMLDivElement>(null);
 
   // API 호출하여 질문 데이터 로드
   useEffect(() => {
     async function fetchInitialData() {
-        setLoading(true);
-        setError(null);
-        try {
-            // API 호출 시 캐시 사용 안 함 (항상 최신 데이터)
-            const response = await fetch('/api/questions', { cache: 'no-store' });
-            if (!response.ok) {
-                throw new Error('질문 데이터를 불러오는 데 실패했습니다.');
-            }
-            const data: Question[] = await response.json();
-            setAllQuestions(data);
-            setCurrentOptions(data); // 초기 옵션을 로드된 데이터로 설정
-
-            // 초기 메시지 설정
-            const initialBotMessage: Message = {
-                id: uuidv4(),
-                sender: 'bot',
-                text: '안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.',
-                options: data // 초기 옵션 설정
-            };
-            setConversation([initialBotMessage]);
-
-        } catch (err) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('질문 데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.');
-            }
-        } finally {
-            setLoading(false);
+      setLoading(true);
+      setError(null);
+      try {
+        // API 호출 시 캐시 사용 안 함 (항상 최신 데이터)
+        const response = await fetch("/api/questions", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("질문 데이터를 불러오는 데 실패했습니다.");
         }
+        const data: Question[] = await response.json();
+        setAllQuestions(data);
+        setCurrentOptions(data); // 초기 옵션을 로드된 데이터로 설정
+
+        // 초기 메시지 설정
+        const initialBotMessage: Message = {
+          id: uuidv4(),
+          sender: "bot",
+          text: "안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.",
+          options: data, // 초기 옵션 설정
+        };
+        setConversation([initialBotMessage]);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("질문 데이터를 불러오는 중 알 수 없는 오류가 발생했습니다.");
+        }
+      } finally {
+        setLoading(false);
+      }
     }
     fetchInitialData();
   }, []); // 마운트 시 한 번만 실행
@@ -210,13 +235,13 @@ export default function Home() {
 
     const userMessage: Message = {
       id: uuidv4(),
-      sender: 'user',
+      sender: "user",
       text: question.text,
     };
 
     const botMessage: Message = {
       id: uuidv4(),
-      sender: 'bot',
+      sender: "bot",
       text: question.answer || "죄송합니다. 아직 답변이 준비되지 않았습니다.",
       options: question.children || [],
     };
@@ -229,10 +254,10 @@ export default function Home() {
     if (optionsHistory.length > 0) {
       const previousOptions = optionsHistory[optionsHistory.length - 1];
       const newHistory = optionsHistory.slice(0, -1);
-      
+
       setCurrentOptions(previousOptions);
       setOptionsHistory(newHistory);
-      setConversation(conversation.slice(0, -2)); 
+      setConversation(conversation.slice(0, -2));
     }
   };
 
@@ -241,29 +266,47 @@ export default function Home() {
     if (loading || error) return; // 데이터 로딩 중이거나 에러 시 동작 안 함
     const initialBotMessage: Message = {
       id: uuidv4(),
-      sender: 'bot',
-      text: '안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.',
-      options: allQuestions // 로드된 전체 질문 사용
+      sender: "bot",
+      text: "안녕하세요! 취업, 학습, 진로와 관련하여 궁금한 점이 있으신가요? 아래에서 질문을 선택해주세요.",
+      options: allQuestions, // 로드된 전체 질문 사용
     };
     setConversation([initialBotMessage]);
     setCurrentOptions(allQuestions); // 로드된 전체 질문 사용
     setOptionsHistory([]);
   };
 
+  // 어드민 페이지로 이동하는 함수 추가
+  const handleAdminPage = () => {
+    window.location.href = "/admin";
+  };
+
   // 로딩 및 에러 상태 처리 추가
   if (loading) {
-    return <PageWrapper><Container><Title>로딩 중...</Title></Container></PageWrapper>;
+    return (
+      <PageWrapper>
+        <Container>
+          <Title>로딩 중...</Title>
+        </Container>
+      </PageWrapper>
+    );
   }
 
   if (error) {
-     return <PageWrapper><Container><Title>오류 발생</Title><p style={{textAlign: 'center', color: 'red'}}>{error}</p></Container></PageWrapper>;
+    return (
+      <PageWrapper>
+        <Container>
+          <Title>오류 발생</Title>
+          <p style={{ textAlign: "center", color: "red" }}>{error}</p>
+        </Container>
+      </PageWrapper>
+    );
   }
 
   return (
     <PageWrapper>
       <Container>
         <Title>Job Counseling Chatbot</Title>
-        
+
         <MessageList ref={messageListRef}>
           {conversation.map((msg) => (
             <MessageBubble key={msg.id} $sender={msg.sender}>
@@ -273,24 +316,30 @@ export default function Home() {
         </MessageList>
 
         <OptionsContainer>
-            <OptionsGrid>
-              {currentOptions.map((question) => (
-                <OptionButton 
-                  key={question.id} 
-                  onClick={() => handleOptionClick(question)}
-                >
-                  {question.text}
-                </OptionButton>
-              ))}
-            </OptionsGrid>
-            <NavigationButtons>
-              <NavButton onClick={handleBack} disabled={optionsHistory.length === 0}>
-                뒤로 가기
-              </NavButton>
-              <NavButton onClick={handleHome}>
-                처음으로
-              </NavButton>
-            </NavigationButtons>
+          <OptionsGrid>
+            {currentOptions.map((question) => (
+              <OptionButton
+                key={question.id}
+                onClick={() => handleOptionClick(question)}
+              >
+                {question.text}
+              </OptionButton>
+            ))}
+          </OptionsGrid>
+          <NavigationButtons>
+            <NavButton
+              onClick={handleBack}
+              disabled={optionsHistory.length === 0}
+            >
+              뒤로 가기
+            </NavButton>
+            <NavButton onClick={handleHome}>처음으로</NavButton>
+          </NavigationButtons>
+          <AdminLinkContainer>
+            <AdminLink onClick={handleAdminPage}>
+              관리자 페이지로 이동
+            </AdminLink>
+          </AdminLinkContainer>
         </OptionsContainer>
       </Container>
     </PageWrapper>
